@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>hazza</title>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      overflow: hidden;
+      background: black;
+      cursor: url("cursor.png") 16 16, auto;
+    }
+
+    /* SPOTIFY PROGRESS */
+.spotify-progress {
+  margin: 8px 0 14px;
+}
+
+.spotify-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.spotify-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #1db954, #1ed760);
+  transition: width 0.4s linear;
+}
+
+.spotify-time {
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #aaa;
+}
+
+    /* INTRO OVERLAY */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease;
+}
+
+.intro-text {
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: white;
+}
+
+.cursor {
+  margin-left: 2px;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Hide page until entered */
+body.locked .card {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+body .card {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+    /* BACKGROUND */
+    .bg {
+      position: fixed;
+      inset: 0;
+      background: url("https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyamw2ajMzaHJqZjd1ZTViYTluNmQ5cG83ZjdiMGtzdjQwMHl2ZGVyOCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/CchzkJJ6UrQmQ/giphy.gif") center / cover no-repeat;
+      filter: brightness(0.45);
+      transform: scale(1.1);
+      z-index: -2;
+      transition: transform 0.1s linear;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: -1;
+    }
+
+    /* CARD */
+    .card {
+      width: 100%;
+      max-width: 380px;
+      padding: 28px;
+      text-align: center;
+      border-radius: 22px;
+      background: rgba(20,20,20,0.65);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      border: 2px solid rgba(255,255,255,0.15);
+    }
+
+    /* NAME + BADGE */
+    .name-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+#name-type {
+    display: inline-block;
+    transition: opacity 0.3s ease;
+}
+
+    .badge {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .badge img {
+      width: 100%;
+      height: 100%;
+    }
+
+    .badge-tooltip {
+      position: absolute;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 6px;
+      opacity: 0;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .badge:hover .badge-tooltip {
+      opacity: 1;
+    }
+
+    .username {
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* DISCORD STATUS */
+    .discord-status {
+      font-size: 13px;
+      color: #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .status-dot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: pulse 1.8s ease-out infinite;
+    }
+
+    .online { background:#23a55a; }
+    .online::after { background:rgba(35,165,90,0.5); }
+
+    .idle { background:#faa81a; }
+    .idle::after { background:rgba(250,168,26,0.5); }
+
+    .dnd { background:#f23f43; }
+    .dnd::after { background:rgba(242,63,67,0.5); }
+
+    .offline { background:#747f8d; }
+    .offline::after { display:none; }
+
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.6; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* TIME */
+    .time-row {
+      font-size: 12px;
+      color: #888;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 16px;
+    }
+
+    /* LINKS */
+    .link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-decoration: none;
+      color: white;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .link:hover {
+      background: rgba(255,255,255,0.12);
+      transform: scale(1.04);
+    }
+
+    .footer {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* MUSIC PLAYER */
+.music-player {
+  position: fixed;
+  left: 20px;
+  bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(20,20,20,0.7);
+  backdrop-filter: blur(12px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  z-index: 999;
+}
+
+.music-player button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.music-player button:hover {
+  opacity: 0.8;
+}
+
+.music-player input[type="range"] {
+  width: 80px;
+  accent-color: white;
+}
+
+/* BLUR CONTROLLER */
+.blur-controller {
+  position: fixed;
+  right: 20px;
+  bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(20,20,20,0.7);
+  backdrop-filter: blur(12px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  z-index: 999;
+}
+
+.blur-controller i {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.blur-controller input[type="range"] {
+  width: 80px;
+  accent-color: white;
+}
+
+/* AUDIO VISUALIZER */
+#visualizer {
+  position: fixed;
+  left: 20px;
+  bottom: 100px;
+  width: 220px;
+  height: 60px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+/* CMD STATUS LOG */
+.cmd-log {
+  position: fixed;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 360px;
+  height: 420px;
+
+  background: rgba(10, 10, 10, 0.85);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 12px;
+  color: #c7f5d9;
+
+  padding: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.cmd-header {
+  color: #7cff9e;
+  margin-bottom: 8px;
+}
+
+.cmd-body {
+  height: calc(100% - 20px);
+  overflow-y: auto;
+  white-space: pre-line;
+}
+
+.cmd-line {
+  margin-bottom: 4px;
+}
+
+.cmd-time {
+  color: #6aa9ff;
+}
+
+.cmd-warn {
+  color: #ffaa6a;
+}
+
+.cmd-error {
+  color: #ff6a6a;
+}
+
+.perf-panel {
+  position: fixed;
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 360px;
+  height: 420px;
+
+  background: rgba(10, 10, 10, 0.85);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 12px;
+  color: #c7f5d9;
+
+  padding: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+/* PERFORMANCE GRAPH */
+#perf-graph {
+  display: block;
+  width: 100%;
+  height: 120px;
+  margin-top: 10px;
+
+  background: rgba(0,0,0,0.35);
+  border-radius: 8px;
+}
+  </style>
+</head>
+<body>
+    
+<!-- MUSIC PLAYER -->
+<div class="music-player">
+  <button id="play-btn">
+    <i class="fa-solid fa-play"></i>
+  </button>
+
+  <input
+    id="volume"
+    type="range"
+    min="0"
+    max="1"
+    step="0.01"
+    value="0.4"
+  />
+
+  <audio id="music" loop>
+    <!-- replace with your song -->
+    <source src="music.mp3" type="audio/mpeg" />
+  </audio>
+</div>
+
+<canvas id="visualizer"></canvas>
+
+<div class="perf-panel">
+  <div class="cmd-header">
+    Performance Monitor
+    <br>
+    hzaOS v1.0
+  </div>
+
+  <div class="cmd-body" id="perf-body">
+    CPU Usage: --
+    <br>
+    Memory Usage: --
+    <br>
+    GPU Usage: --
+  </div>
+
+  <!-- PERFORMANCE HISTORY GRAPH -->
+  <canvas id="perf-graph"></canvas>
+</div>
+
+<!-- CMD STATUS LOG -->
+<div class="cmd-log">
+  <div class="cmd-header">
+    Microsoft Windows [Version 10.0.22631.3296]
+    <br>
+    (c) hza softworks. All rights reserved.
+  </div>
+
+  <div class="cmd-body" id="cmd-body"></div>
+</div>
+
+<!-- BLUR CONTROLLER -->
+<div class="blur-controller">
+  <i class="fa-solid fa-eye-slash"></i>
+  <input
+    id="blur"
+    type="range"
+    min="0"
+    max="20"
+    step="1"
+    value="0"
+  />
+</div>
+
+<!-- PRESS ENTER INTRO -->
+<div id="intro">
+  <div class="intro-text">
+    <span id="typewriter"></span><span class="cursor">█</span>
+  </div>
+</div>
+
+<div class="bg" id="bg"></div>
+<div class="overlay"></div>
+
+<div class="card">
+  <img class="avatar" src="https://catswilleatyou.com/wp-content/uploads/2016/05/2016_06_01_darkface.gif"/>
+
+  <div class="name-row">
+    <h1>
+  <span id="name-type"></span><span class="cursor">█</span>
+    </h1>
+    <div class="badge">
+      <img src="developer.png">
+      <span class="badge-tooltip">Developer</span>
+    </div>
+  </div>
+
+  <div class="username">@hza</div>
+
+  <div class="discord-status">
+    <span class="status-dot offline" id="status-dot"></span>
+    <span id="status-text">Connecting to Discord...</span>
+  </div>
+
+  <div class="spotify-progress" id="spotify-progress" style="display:none;">
+  <div class="spotify-bar">
+    <div class="spotify-fill" id="spotify-fill"></div>
+  </div>
+  <div class="spotify-time">
+    <span id="spotify-current">0:00</span>
+    <span id="spotify-total">0:00</span>
+  </div>
+</div>
+
+  <div class="time-row">
+    <span id="local-time">--:--:-- GMT</span>
+    <span id="last-online" style="display:none;"></span>
+  </div>
+
+  <a class="link" href="https://discord.com/users/796782781744939029" target="_blank">
+    <i class="fa-brands fa-discord"></i> Discord
+  </a>
+  <a class="link" href="https://open.spotify.com/user/7e8u8s6l546udbj8b6kkqy3m7" target="_blank">
+    <i class="fa-brands fa-spotify"></i> Spotify
+  </a>
+  <a class="link" href="https://steamcommunity.com/id/hazhuh" target="_blank">
+    <i class="fa-brands fa-steam"></i> Steam
+  </a>
+  <a class="link" href="https://www.youtube.com/@hazzafnbr" target="_blank">
+    <i class="fa-brands fa-youtube"></i> YouTube
+  </a>
+  <a class="link" href="https://www.twitch.tv/hazzaa08" target="_blank">
+    <i class="fa-brands fa-twitch"></i> Twitch
+  </a>
+
+  <div class="footer">© 2026 hza softworks</div>
+</div>
+
+<script>
+/* PRESS ENTER TYPEWRITER */
+document.body.classList.add("locked");
+
+const text = "press any key";
+const el = document.getElementById("typewriter");
+const intro = document.getElementById("intro");
+
+let i = 0;
+let deleting = false;
+
+function typeLoop() {
+  if (!deleting) {
+    el.textContent = text.slice(0, i++);
+    if (i > text.length) {
+      setTimeout(() => deleting = true, 1000);
+    }
+  } else {
+    el.textContent = text.slice(0, i--);
+    if (i < 0) {
+      deleting = false;
+    }
+  }
+}
+
+setInterval(typeLoop, 120);
+
+/* MUSIC PLAYER */
+const music = document.getElementById("music");
+const playBtn = document.getElementById("play-btn");
+const volume = document.getElementById("volume");
+const icon = playBtn.querySelector("i");
+
+/* Restore settings */
+music.volume = localStorage.getItem("vol") ?? 0.4;
+volume.value = music.volume;
+
+if (localStorage.getItem("playing") === "true") {
+  music.play().catch(()=>{});
+  icon.className = "fa-solid fa-pause";
+}
+
+playBtn.onclick = () => {
+  if (music.paused) {
+    music.play();
+    icon.className = "fa-solid fa-pause";
+    localStorage.setItem("playing", "true");
+
+    logCMD("Music playback started");
+  } else {
+    music.pause();
+    icon.className = "fa-solid fa-play";
+    localStorage.setItem("playing", "false");
+
+    logCMD("Music playback paused", "warn");
+  }
+};
+
+/* Volume */
+volume.oninput = () => {
+  music.volume = volume.value;
+  localStorage.setItem("vol", volume.value);
+};
+
+/* ENTER SITE (any key or click) */
+function enterSite() {
+  if (!document.body.classList.contains("locked")) return;
+
+  // Prevent double trigger
+  document.removeEventListener("keydown", enterSite);
+  document.removeEventListener("click", enterSite);
+
+  intro.style.opacity = "0";
+  document.body.classList.remove("locked");
+
+  setTimeout(() => {
+    intro.remove();
+
+    const card = document.querySelector(".card");
+    card.style.opacity = "1";
+    card.style.transform = "scale(1)";
+      startNameAnimation();
+
+    music.play().catch(()=>{});
+    icon.className = "fa-solid fa-pause";
+    localStorage.setItem("playing", "true");
+  }, 600);
+}
+
+/* Attach listeners ONCE */
+document.addEventListener("keydown", enterSite);
+document.addEventListener("click", enterSite);
+</script>
+
+<script>
+/* PARALLAX */
+const bg = document.getElementById("bg");
+document.addEventListener("mousemove", e => {
+  bg.style.transform =
+    `scale(1.1) translate(${(e.clientX/innerWidth-.5)*20}px, ${(e.clientY/innerHeight-.5)*20}px)`;
+});
+
+/* GMT TIME */
+const timeEl = document.getElementById("local-time");
+setInterval(() => {
+  const d = new Date();
+  timeEl.textContent =
+    `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}:${String(d.getUTCSeconds()).padStart(2,"0")} GMT`;
+}, 1000);
+
+/* DISCORD PRESENCE */
+const statusDot = document.getElementById("status-dot");
+const statusText = document.getElementById("status-text");
+const lastOnlineEl = document.getElementById("last-online");
+let lastOnline = null;
+let lastDiscordStatus = null;
+let lastSpotifyTrack = null;
+
+const socket = new WebSocket("wss://api.lanyard.rest/socket");
+socket.addEventListener("open", () =>
+  socket.send(JSON.stringify({ op:2, d:{ subscribe_to_id:"796782781744939029" }}))
+);
+
+socket.addEventListener("message", e => {
+  const d = JSON.parse(e.data)?.d;
+  if (!d) return;
+
+const s = d.discord_status || "offline";
+
+/* LOG STATUS CHANGE */
+if (s !== lastDiscordStatus) {
+  logCMD(`Discord status → ${s.toUpperCase()}`);
+  lastDiscordStatus = s;
+}
+
+statusDot.className = `status-dot ${s}`;
+
+  if (s !== "offline") {
+    lastOnline = Date.now();
+    lastOnlineEl.style.display = "none";
+  } else if (lastOnline) {
+    const t = new Date(lastOnline);
+    lastOnlineEl.textContent =
+      `Last online: ${String(t.getUTCHours()).padStart(2,"0")}:${String(t.getUTCMinutes()).padStart(2,"0")} GMT`;
+    lastOnlineEl.style.display = "block";
+  }
+
+if (d.spotify) {
+  const sp = d.spotify;
+  const currentTrack = `${sp.song} — ${sp.artist}`;
+
+  statusText.textContent = `🎵 ${currentTrack}`;
+  document.getElementById("spotify-progress").style.display = "block";
+
+  const start = sp.timestamps.start;
+  const end = sp.timestamps.end;
+  const durationMs = end - start;
+
+  const totalMin = Math.floor(durationMs / 60000);
+  const totalSec = Math.floor((durationMs % 60000) / 1000);
+
+  document.getElementById("spotify-total").textContent =
+    `${totalMin}:${String(totalSec).padStart(2,"0")}`;
+
+  if (currentTrack !== lastSpotifyTrack) {
+    logCMD(`Now playing: ${currentTrack}`);
+    logCMD(`Duration: ${totalMin}:${String(totalSec).padStart(2,"0")}`);
+    lastSpotifyTrack = currentTrack;
+  }
+
+  clearInterval(window.spotifyInterval);
+  window.spotifyInterval = setInterval(() => {
+    const now = Date.now();
+    const elapsed = Math.min(now - start, durationMs);
+
+    const curMin = Math.floor(elapsed / 60000);
+    const curSec = Math.floor((elapsed % 60000) / 1000);
+
+    document.getElementById("spotify-current").textContent =
+      `${curMin}:${String(curSec).padStart(2,"0")}`;
+
+    const percent = (elapsed / durationMs) * 100;
+    document.getElementById("spotify-fill").style.width = percent + "%";
+  }, 1000);
+
+} else {
+  document.getElementById("spotify-progress").style.display = "none";
+  clearInterval(window.spotifyInterval);
+
+  const a = d.activities?.find(x => x.type === 0);
+
+  if (a) {
+    statusText.textContent =
+      `${formatStatus(s)} — ${a.name}`;
+  } else {
+    statusText.textContent = formatStatus(s);
+  }
+}
+  }
+);
+</script>
+
+<script>
+/* BACKGROUND BLUR CONTROL */
+const blurSlider = document.getElementById("blur");
+const bgEl = document.getElementById("bg");
+
+/* Restore blur */
+const savedBlur = localStorage.getItem("bgBlur") ?? 0;
+blurSlider.value = savedBlur;
+bgEl.style.filter = `brightness(0.45) blur(${savedBlur}px)`;
+
+/* Update blur */
+blurSlider.oninput = () => {
+  bgEl.style.filter = `brightness(0.45) blur(${blurSlider.value}px)`;
+  localStorage.setItem("bgBlur", blurSlider.value);
+};
+
+/* USERNAME TYPEWRITER */
+const nameEl = document.getElementById("name-type");
+const names = ["hazza", "hza", "hazhuhh"];
+
+let nameIndex = 0;
+let charIndex = 0;
+let deletingName = false;
+
+function nameTypeLoop() {
+  const current = names[nameIndex];
+
+  if (!deletingName) {
+    nameEl.textContent = current.slice(0, charIndex++);
+    if (charIndex > current.length) {
+      setTimeout(() => deletingName = true, 1000);
+    }
+  } else {
+    nameEl.textContent = current.slice(0, charIndex--);
+    if (charIndex < 0) {
+      deletingName = false;
+      nameIndex = (nameIndex + 1) % names.length;
+
+      /* fade effect */
+      nameEl.style.opacity = "0";
+      setTimeout(() => {
+        nameEl.style.opacity = "1";
+      }, 150);
+    }
+  }
+}
+
+/* START AFTER ENTER */
+let nameInterval = null;
+function startNameAnimation() {
+  if (!nameInterval) {
+    nameInterval = setInterval(nameTypeLoop, 110);
+  }
+}
+/* AUDIO VISUALIZER */
+const canvas = document.getElementById("visualizer");
+const ctx = canvas.getContext("2d");
+
+canvas.width = 220;
+canvas.height = 60;
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const source = audioCtx.createMediaElementSource(music);
+const analyser = audioCtx.createAnalyser();
+
+analyser.fftSize = 128;
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
+
+source.connect(analyser);
+analyser.connect(audioCtx.destination);
+
+/* Unlock audio context */
+document.addEventListener("click", () => {
+  if (audioCtx.state === "suspended") audioCtx.resume();
+});
+document.addEventListener("keydown", () => {
+  if (audioCtx.state === "suspended") audioCtx.resume();
+});
+
+function drawVisualizer() {
+  requestAnimationFrame(drawVisualizer);
+  analyser.getByteFrequencyData(dataArray);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const barWidth = canvas.width / bufferLength;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const barHeight = dataArray[i] * 0.35;
+
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillRect(
+      i * barWidth,
+      canvas.height - barHeight,
+      barWidth - 1,
+      barHeight
+    );
+  }
+}
+
+drawVisualizer();
+
+/* CMD STATUS LOGGER */
+const cmdBody = document.getElementById("cmd-body");
+
+function cmdTime() {
+  const d = new Date();
+  return `[${d.toUTCString().slice(17, 25)}]`;
+}
+
+function logCMD(text, type = "normal") {
+  const line = document.createElement("div");
+  line.className = "cmd-line";
+
+  if (type === "warn") line.classList.add("cmd-warn");
+  if (type === "error") line.classList.add("cmd-error");
+
+  line.innerHTML = `<span class="cmd-time">${cmdTime()}</span> ${text}`;
+  cmdBody.appendChild(line);
+
+  cmdBody.scrollTop = cmdBody.scrollHeight;
+}
+
+/* BOOT SEQUENCE */
+logCMD("Initializing hzaOS...");
+setTimeout(() => logCMD("Loading UI modules..."), 500);
+setTimeout(() => logCMD("Connecting to Discord gateway..."), 1000);
+setTimeout(() => logCMD("Audio engine ready"), 1500);
+setTimeout(() => logCMD("Visualizer attached"), 2000);
+setTimeout(() => logCMD("System online ✔"), 2500);
+
+/* LINK CLICK LOGGER */
+document.querySelectorAll(".link").forEach(link => {
+  link.addEventListener("click", () => {
+    const name = link.textContent.trim();
+    logCMD(`Opening ${name} link`);
+  });
+});
+</script>
+
+<script>
+/* PERFORMANCE MONITOR (SIMULATED TASK MANAGER) */
+const perfBody = document.getElementById("perf-body");
+
+/* === ADD THIS BLOCK === */
+const historyLength = 60;
+const cpuHistory = [];
+const memHistory = [];
+const gpuHistory = [];
+
+function push(arr, val) {
+  arr.push(val);
+  if (arr.length > historyLength) arr.shift();
+}
+/* === END ADD === */
+
+let cpuVal = 0;
+let memVal = 0;
+let gpuVal = 0;
+
+function updatePerformance() {
+  cpuVal = +(Math.random() * 40 + 10).toFixed(1);
+  memVal = +(Math.random() * 30 + 40).toFixed(1);
+  gpuVal = music && !music.paused
+    ? +(Math.random() * 50 + 20).toFixed(1)
+    : +(Math.random() * 10 + 5).toFixed(1);
+
+  perfBody.innerHTML = `
+    CPU Usage: ${cpuVal}%
+    <br>
+    Memory Usage: ${memVal}%
+    <br>
+    GPU Usage: ${gpuVal}%
+  `;
+
+  push(cpuHistory, cpuVal);
+  push(memHistory, memVal);
+  push(gpuHistory, gpuVal);
+
+  drawPerfGraph();
+}
+
+</script>
+
+<script>
+/* PERFORMANCE HISTORY GRAPH (INSIDE PANEL) */
+const graph = document.getElementById("perf-graph");
+const gctx = graph.getContext("2d");
+
+graph.width = graph.parentElement.clientWidth - 24;
+graph.height = 120;
+
+function drawPerfGraph() {
+  gctx.clearRect(0, 0, graph.width, graph.height);
+
+  function drawLine(data, color) {
+    gctx.beginPath();
+    gctx.strokeStyle = color;
+    gctx.lineWidth = 2;
+
+    data.forEach((v, i) => {
+      const x = (i / (historyLength - 1)) * graph.width;
+      const y = graph.height - (v / 100) * graph.height;
+      i === 0 ? gctx.moveTo(x, y) : gctx.lineTo(x, y);
+    });
+
+    gctx.stroke();
+  }
+
+  drawLine(cpuHistory, "#23a55a"); // CPU
+  drawLine(memHistory, "#6aa9ff"); // Memory
+  drawLine(gpuHistory, "#b56cff"); // GPU
+}
+
+setInterval(updatePerformance, 1000);
+
+updatePerformance();
+</script>
+
+</body>
+</html>
